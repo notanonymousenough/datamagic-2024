@@ -21,9 +21,8 @@ class App:
 
     async def run(self):
         while True:
-            print(self.last_req)
             res = await self.api.move(self.last_req)
-            # print(res)
+            print(res)
             if res is None and self.debug:
                 random_modifier(self.last_data)
             else:
@@ -72,6 +71,8 @@ class App:
 
     def rate_bandits_and_enemies(self, transport, wanted_list, enemies):
         n = {'x': None, 'y': None}
+        if transport['attackCooldownMs'] != 0:
+            return n
         transport_x = transport["x"]
         transport_y = transport["y"]
 
