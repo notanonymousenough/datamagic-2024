@@ -14,7 +14,8 @@ ANOMALY_COLOR_EFFECTIVITY = (128, 255, 0, 1)  # Полупрозрачный ц�
 
 
 def map_coordinates(x, y, map_size, screen_size):
-    return int(x * screen_size[0] / map_size['x']), int(y * screen_size[1] / map_size['y'])
+    # return int(x * screen_size[0] / map_size['x']), int(y * screen_size[1] / map_size['y'])
+    return int(x * screen_size[0] / map_size['x']), int((map_size['y'] - y) * screen_size[1] / map_size['y'])  # инвертировать по вертикали
 
 
 class GameVisualizer:
@@ -27,9 +28,13 @@ class GameVisualizer:
         self.update_interval = update_interval
         self.running = True
 
+        # Инициализация шрифта
+        pygame.font.init()
+        self.font = pygame.font.SysFont('Arial', 24)  # Шрифт Arial, размер 24
+        self.font_transport = pygame.font.SysFont('Arial', 14)  # Шрифт Arial, размер 24
+
     def update_screen(self, data):
         self.screen.fill(BACKGROUND_COLOR)
-
 
         # Рисуем "награды" (bounties)
         for bounty in data['bounties']:
@@ -63,11 +68,46 @@ class GameVisualizer:
             #             (anomaly_x - effective_radius, anomaly_y - effective_radius))  # Смещаем центр круга
 
         # Рисуем игроков
-        for player in data['transports']:
+        for i, player in enumerate(data['transports']):
             player_x, player_y = map_coordinates(player['x'], player['y'], data['mapSize'], self.screen.get_size())
             pygame.draw.circle(self.screen, PLAYER_COLOR, (player_x, player_y), data['transportRadius'])
 
+            # Отображаем номер транспорта рядом с кругом
+            number_text = self.font.render(str(i + 1), True, (0, 0, 0))  # Черный цвет для номера
+            self.screen.blit(number_text, (player_x + data['transportRadius'] + 5, player_y - 10))
+
+        # Отображаем очки
+        points_text = f"Points: {data['points']}"
+        points_surface = self.font.render(points_text, True, (0, 0, 0))  # Черный цвет текста
+        text_width = points_surface.get_width()
+        self.screen.blit(points_surface, (self.screen.get_width() - text_width - 10, 10))  # Координаты (10, 10) для отступа от углов
+
+        # transports info
+        self.draw_transport_info(data['transports'])
+
         pygame.display.flip()
+
+    def draw_transport_info(self, data):
+        offset_y = 10  # Смещение по Y для каждого нового транспорта
+        for i, transport in enumerate(data):
+            # Основная информация
+            info_lines = [
+                f"Transport {i + 1}:",
+                f"  velocity: x={transport['velocity']['x']}, y={transport['velocity']['y']}",
+                f"  selfAcceleration: x={transport['selfAcceleration']['x']}, y={transport['selfAcceleration']['y']}",
+                f"  anomalyAcceleration: x={transport['anomalyAcceleration']['x']}, y={transport['anomalyAcceleration']['y']}",
+                f"  health: {transport['health']}",
+                f"  status: {transport['status']}",
+                f"  deathCount: {transport['deathCount']}"
+            ]
+
+            # Отрисовка каждой строки информации
+            for j, line in enumerate(info_lines):
+                text_surface = self.font_transport.render(line, True, (0, 0, 0))  # Белый текст
+                self.screen.blit(text_surface, (10, offset_y + j * 16))  # Смещение каждой строки на 20 пикселей по Y
+
+            # Обновляем смещение для следующего транспорта
+            offset_y += len(info_lines) * 20 + 10  # Добавляем небольшой отступ между транспортами
 
     def step(self, data_source):
         if not self.running:
