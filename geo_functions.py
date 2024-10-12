@@ -27,21 +27,24 @@ def get_nearest_bounty(transport, bounties):
     transport_y = transport["y"]
 
     # Инициализируем минимальное расстояние как бесконечность
-    min_distance = float('inf')
     nearest_bounty = None
-
+    max_score = -float('inf')
     # Проходим по списку монеток и находим ближайшую
     for bounty in bounties:
         bounty_x = bounty["x"]
         bounty_y = bounty["y"]
+        bounty_points = bounty["points"]
 
         # Рассчитываем евклидово расстояние
         distance = math.sqrt((bounty_x - transport_x) ** 2 + (bounty_y - transport_y) ** 2)
-
-        # Обновляем ближайшую монетку, если нашли ближе
-        if distance < min_distance:
-            min_distance = distance
+        if distance == 0:
+            continue
+        score = bounty_points / distance
+        # Обновляем ближайшую монетку, если нашли ближе и дороже
+        if score > max_score:
+            max_score = score
             nearest_bounty = bounty
+
     return nearest_bounty
 
 
