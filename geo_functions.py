@@ -15,7 +15,7 @@ def scale_to_max_available_acceleration(x, y, max_acceleration):
     vector_length = math.sqrt(x ** 2 + y ** 2)
 
     # Если длина вектора больше максимального ускорения, масштабируем его
-    if vector_length > max_acceleration:
+    if vector_length >= max_acceleration:
         scaling_factor = max_acceleration / vector_length
         x *= scaling_factor
         y *= scaling_factor
