@@ -2,7 +2,8 @@ import asyncio
 import traceback
 from app import App
 
-TOKEN = ""
+with open("token", 'r') as file:
+    TOKEN = file.read()
 DEBUG = True
 
 
