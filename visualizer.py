@@ -9,8 +9,10 @@ BACKGROUND_COLOR = (255, 255, 255)  # Белый фон
 PLAYER_COLOR = (0, 0, 255)
 ENEMY_COLOR = (255, 0, 0, 200)  # Красный
 BOUNTY_COLOR = (255, 215, 0)  # Золотой цвет
-ANOMALY_COLOR_CENTER = (0, 255, 255, 128)  # Полупрозрачный цвет для аномалий
-ANOMALY_COLOR_EFFECTIVITY = (128, 255, 0, 1)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 128)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_EFFECTIVITY_POSITIVE = (0, 255, 255, 1)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 128)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_EFFECTIVITY_NEGATIVE = (140, 0, 255, 1)  # Полупрозрачный цвет для аномалий
 
 
 def map_coordinates(x, y, map_size, screen_size):
@@ -55,8 +57,12 @@ class GameVisualizer:
 
             # Первая поверхность для круга с радиусом "radius"
             radius = int(anomaly['radius'])
+            if anomaly['strength'] >= 0:
+                anomaly_color = ANOMALY_COLOR_CENTER_POSITIVE
+            else:
+                anomaly_color = ANOMALY_COLOR_CENTER_NEGATIVE
             surface_small = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)  # Диаметр
-            pygame.draw.circle(surface_small, ANOMALY_COLOR_CENTER, (radius, radius), radius)  # Рисуем круг с радиусом
+            pygame.draw.circle(surface_small, anomaly_color, (radius, radius), radius)  # Рисуем круг с радиусом
             self.screen.blit(surface_small, (anomaly_x - radius, anomaly_y - radius))  # Смещаем центр круга
 
             # Вторая поверхность для большого круга с радиусом "effectiveRadius"
