@@ -3,8 +3,8 @@ import time
 
 
 # Размеры окна
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 1000
 BACKGROUND_COLOR = (255, 255, 255)  # Белый фон
 PLAYER_COLOR = (0, 0, 255)
 PLAYER_WITH_SHIELD_COLOR = (0, 255, 255)
@@ -24,7 +24,7 @@ def map_coordinates(x, y, map_size, screen_size):
 
 
 def get_radius(radius, map_size, screen_size):
-    return int(radius * screen_size[0] / map_size['x']) + 1
+    return int(radius * screen_size[0] / map_size['x']) + 2
 
 
 class GameVisualizer:

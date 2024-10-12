@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from math import sqrt
 
 from api import Api
 from threading import Thread
@@ -61,7 +62,7 @@ class App:
             top_target = self.rate_targets(transport, anomalies, enemies, wanted_list, bounties)
             targets.append(top_target)
             acc = self.reach_target_acceleration(transport, top_target, map_size, max_accel)
-            attack = self.rate_bandits_and_enemies(transport, wanted_list, enemies)
+            attack = self.rate_bandits_and_enemies(transport, wanted_list, enemies, attack_damage)
             shield = self.need_shield(transport, wanted_list)
             req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], shield, attack['x'], attack['y']))
         return req, targets
@@ -69,7 +70,7 @@ class App:
     def rate_targets(self, transport, anomalies, enemies, wanted_list, bounties):
         return get_nearest_bounty(transport, bounties)
 
-    def rate_bandits_and_enemies(self, transport, wanted_list, enemies):
+    def rate_bandits_and_enemies(self, transport, wanted_list, enemies, attack_damage):
         n = {'x': None, 'y': None}
         if transport['attackCooldownMs'] != 0:
             return n
@@ -111,21 +112,25 @@ class App:
     def reach_target_acceleration(self, transport, target, map_size, max_accel):
         # go to target
         acc = get_max_vector_to_target(transport, target['x'], target['y'])
-        distance_to_target = (acc['x']**2 + acc['y']**2)**0.5
+        distance_to_target = (acc['x'] ** 2 + acc['y'] ** 2) ** 0.5
+
+        if (transport['anomalyAcceleration']['x'] ** 2 + transport['anomalyAcceleration']['y'] ** 2) ** 0.5 >= 6:
+            acc = {'x': 0, 'y': 0}
 
         # invert anomaly acceleration
         acc['x'] -= transport['anomalyAcceleration']['x']
         acc['y'] -= transport['anomalyAcceleration']['y']
 
         # go from walls
-        acc = adjust_force_to_stay_within_field(map_size, {'x': transport['x'], 'y': transport['y']}, transport['velocity'], acc)
+        acc = adjust_force_to_stay_within_field(map_size, {'x': transport['x'], 'y': transport['y']},
+                                                transport['velocity'], acc)
 
         # make velocity small
-        velocity_k = distance_to_target/200
-        if abs(transport['velocity']['x']) > MAX_VELOCITY*velocity_k:
-            acc['x'] = -transport['velocity']['x'] * 3
-        if abs(transport['velocity']['y']) > MAX_VELOCITY*velocity_k:
-            acc['y'] = -transport['velocity']['y'] * 3
+        velocity_k = distance_to_target / 200
+        if abs(transport['velocity']['x']) > MAX_VELOCITY * velocity_k:
+            acc['x'] = -transport['velocity']['x'] * 15
+        if abs(transport['velocity']['y']) > MAX_VELOCITY * velocity_k:
+            acc['y'] = -transport['velocity']['y'] * 15
 
         return scale_to_max_available_acceleration(acc['x'], acc['y'], max_accel)
 
