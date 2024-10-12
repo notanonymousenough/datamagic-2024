@@ -9,6 +9,7 @@ BACKGROUND_COLOR = (255, 255, 255)  # Белый фон
 PLAYER_COLOR = (0, 0, 255)
 ENEMY_COLOR = (255, 0, 0, 200)  # Красный
 BOUNTY_COLOR = (255, 215, 0)  # Золотой цвет
+BOUNTY_TARGET_COLOR = (0, 0, 0)  # Золотой цвет
 ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 128)  # Полупрозрачный цвет для аномалий
 ANOMALY_COLOR_EFFECTIVITY_POSITIVE = (0, 255, 255, 1)  # Полупрозрачный цвет для аномалий
 ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 128)  # Полупрозрачный цвет для аномалий
@@ -35,7 +36,7 @@ class GameVisualizer:
         self.font = pygame.font.SysFont('Arial', 24)  # Шрифт Arial, размер 24
         self.font_transport = pygame.font.SysFont('Arial', 14)  # Шрифт Arial, размер 24
 
-    def update_screen(self, data):
+    def update_screen(self, data, targets):
         self.screen.fill(BACKGROUND_COLOR)
 
         # Рисуем "награды" (bounties)
@@ -72,6 +73,10 @@ class GameVisualizer:
             #                    effective_radius)  # Круг с радиусом effectiveRadius
             # self.screen.blit(surface_large,
             #             (anomaly_x - effective_radius, anomaly_y - effective_radius))  # Смещаем центр круга
+
+        for bounty in targets:
+            bounty_x, bounty_y = map_coordinates(bounty['x'], bounty['y'], data['mapSize'], self.screen.get_size())
+            pygame.draw.circle(self.screen, BOUNTY_TARGET_COLOR, (bounty_x, bounty_y), bounty['radius'])
 
         # Рисуем игроков
         for i, player in enumerate(data['transports']):
@@ -115,7 +120,7 @@ class GameVisualizer:
             # Обновляем смещение для следующего транспорта
             offset_y += len(info_lines) * 20 + 10  # Добавляем небольшой отступ между транспортами
 
-    def step(self, data_source):
+    def step(self, data_source, targets):
         if not self.running:
             self.close()
             return
@@ -125,7 +130,8 @@ class GameVisualizer:
                 self.running = False
 
         data = data_source()  # Получаем обновленные данные из внешнего источника
-        self.update_screen(data)
+        targets = targets()
+        self.update_screen(data, targets)
 
         self.clock.tick(60)
 
