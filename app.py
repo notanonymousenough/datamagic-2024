@@ -61,11 +61,47 @@ class App:
             top_target = self.rate_targets(transport, anomalies, enemies, wanted_list, bounties)
             targets.append(top_target)
             acc = self.reach_target_acceleration(transport, top_target, map_size, max_accel)
-            req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], False, 0, 0))
+            attack = self.rate_bandits_and_enemies(transport, wanted_list, enemies)
+
+            req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], False, attack['x'], attack['y']))
         return req, targets
 
     def rate_targets(self, transport, anomalies, enemies, wanted_list, bounties):
         return get_nearest_bounty(transport, bounties)
+
+    def rate_bandits_and_enemies(self, transport, wanted_list, enemies):
+        transport_x = transport["x"]
+        transport_y = transport["y"]
+
+        max_bounty = 0
+        best_bandit = {'x':0, 'y':0}
+
+        # для типов с доски почета
+        for bandit in wanted_list:
+            bandit_x = bandit["x"]
+            bandit_y = bandit["y"]
+
+            # Calculate the distance between the transport and the bandit
+            distance = math.sqrt((bandit_x - transport_x) ** 2 + (bandit_y - transport_y) ** 2)
+
+            # Check if the distance is <= 200 and if the bandit's killBounty is the highest
+            if distance <= 200 and bandit["killBounty"] > max_bounty and bandit['shieldLeftMs'] != 0:
+                max_bounty = bandit["killBounty"]
+                best_bandit = bandit
+        if best_bandit != {'x':0, 'y':0}:
+            return best_bandit
+
+        # для обычных типов
+        max_bounty = 0
+        best_enemy = {'x':0, 'y':0}
+        for enemy in enemies:
+            enemy_x = enemy["x"]
+            enemy_y = enemy["y"]
+            distance = math.sqrt((enemy_x - transport_x) ** 2 + (enemy_y - transport_y) ** 2)
+            if distance <= 200 and enemy["killBounty"] > max_bounty and enemy['shieldLeftMs'] != 0:
+                max_bounty = enemy["killBounty"]
+                best_enemy = enemy
+        return best_enemy
 
     def reach_target_acceleration(self, transport, target, map_size, max_accel):
         # go to target
