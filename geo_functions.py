@@ -2,7 +2,7 @@ import math
 from datetime import datetime
 
 
-def get_max_vector_to_target(transport, x2, y2, max_acceleration):
+def get_max_vector_to_target(transport, x2, y2):
     x1, y1 = transport['x'], transport['y']
     vector_x = x2 - x1
     vector_y = y2 - y1

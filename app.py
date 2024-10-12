@@ -7,6 +7,7 @@ from mock import mocked_json, random_modifier
 from visualizer import GameVisualizer
 from geo_functions import *
 
+MAX_VELOCITY = 50
 
 class App:
     def __init__(self, token: str, debug: bool):
@@ -68,7 +69,8 @@ class App:
 
     def reach_target_acceleration(self, transport, target, map_size, max_accel):
         # go to target
-        acc = get_max_vector_to_target(transport, target['x'], target['y'], 10)
+        acc = get_max_vector_to_target(transport, target['x'], target['y'])
+        distance_to_target = (acc['x']**2 + acc['y']**2)**0.5
 
         # invert anomaly acceleration
         acc['x'] -= transport['anomalyAcceleration']['x']
@@ -77,7 +79,12 @@ class App:
         # go from walls
         acc = adjust_force_to_stay_within_field(map_size, {'x': transport['x'], 'y': transport['y']}, transport['velocity'], acc)
 
-        # todo: делать скорость меньше!!
+        # make velocity small
+        velocity_k = distance_to_target/200
+        if abs(transport['velocity']['x']) > MAX_VELOCITY*velocity_k:
+            acc['x'] = -transport['velocity']['x']
+        if abs(transport['velocity']['y']) > MAX_VELOCITY*velocity_k:
+            acc['y'] = -transport['velocity']['y']
 
         return scale_to_max_available_acceleration(acc['x'], acc['y'], max_accel)
 
