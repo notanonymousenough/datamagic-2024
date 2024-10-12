@@ -61,7 +61,8 @@ class App:
             top_target = self.rate_targets(transport, anomalies, enemies, wanted_list, bounties)
             targets.append(top_target)
             acc = self.reach_target_acceleration(transport, top_target, map_size, max_accel)
-            req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], False, 0, 0))
+            shield = self.need_shield(transport, wanted_list)
+            req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], shield, 0, 0))
         return req, targets
 
     def rate_targets(self, transport, anomalies, enemies, wanted_list, bounties):
@@ -82,11 +83,22 @@ class App:
         # make velocity small
         velocity_k = distance_to_target/200
         if abs(transport['velocity']['x']) > MAX_VELOCITY*velocity_k:
-            acc['x'] = -transport['velocity']['x']
+            acc['x'] = -transport['velocity']['x'] * 3
         if abs(transport['velocity']['y']) > MAX_VELOCITY*velocity_k:
-            acc['y'] = -transport['velocity']['y']
+            acc['y'] = -transport['velocity']['y'] * 3
 
         return scale_to_max_available_acceleration(acc['x'], acc['y'], max_accel)
+
+    def need_shield(self, transport, enemies):
+        shield_left_ms = transport['shieldLeftMs']
+        shield_cooldown_ms = transport['shieldCooldownMs']
+        if shield_left_ms != 0 or shield_cooldown_ms != 0:
+            return False
+        for enemy in enemies:
+            d = get_max_vector_to_target(transport, enemy['x'], enemy['y'])
+            if d['x'] <= 200 and d['y'] <= 200:
+                return True
+        return False
 
     def get_transport(self, transport, acc_x, acc_y, use_shield, attack_x, attack_y):
         req = dict()

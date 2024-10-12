@@ -7,6 +7,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 800
 BACKGROUND_COLOR = (255, 255, 255)  # Белый фон
 PLAYER_COLOR = (0, 0, 255)
+PLAYER_WITH_SHIELD_COLOR = (0, 255, 255)
 ENEMY_COLOR = (255, 0, 0, 200)  # Красный
 BOUNTY_COLOR = (255, 215, 0)  # Золотой цвет
 BOUNTY_TARGET_COLOR = (0, 0, 0)  # Золотой цвет
@@ -81,7 +82,10 @@ class GameVisualizer:
         # Рисуем игроков
         for i, player in enumerate(data['transports']):
             player_x, player_y = map_coordinates(player['x'], player['y'], data['mapSize'], self.screen.get_size())
-            pygame.draw.circle(self.screen, PLAYER_COLOR, (player_x, player_y), data['transportRadius'])
+            color = PLAYER_COLOR
+            if player['shieldLeftMs'] != 0:
+                color = PLAYER_WITH_SHIELD_COLOR
+            pygame.draw.circle(self.screen, color, (player_x, player_y), data['transportRadius'])
 
             # Отображаем номер транспорта рядом с кругом
             number_text = self.font.render(str(i + 1), True, (0, 0, 0))  # Черный цвет для номера
