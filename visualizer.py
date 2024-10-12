@@ -99,6 +99,7 @@ class GameVisualizer:
             # Основная информация
             info_lines = [
                 f"Transport {i + 1}:",
+                f"  position: x={transport['x']}, y={transport['y']}",
                 f"  velocity: x={transport['velocity']['x']}, y={transport['velocity']['y']}",
                 f"  selfAcceleration: x={transport['selfAcceleration']['x']}, y={transport['selfAcceleration']['y']}",
                 f"  anomalyAcceleration: x={transport['anomalyAcceleration']['x']}, y={transport['anomalyAcceleration']['y']}",

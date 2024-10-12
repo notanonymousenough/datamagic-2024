@@ -7,18 +7,19 @@ def get_max_vector_to_target(transport, x2, y2, max_acceleration):
     vector_x = x2 - x1
     vector_y = y2 - y1
 
+    # Возвращаем результирующий вектор ускорения
+    return {"x": vector_x, "y": vector_y}
+
+def scale_to_max_available_acceleration(x, y, max_acceleration):
     # Длина вектора AB
-    vector_length = math.sqrt(vector_x ** 2 + vector_y ** 2)
+    vector_length = math.sqrt(x ** 2 + y ** 2)
 
     # Если длина вектора больше максимального ускорения, масштабируем его
     if vector_length > max_acceleration:
         scaling_factor = max_acceleration / vector_length
-        vector_x *= scaling_factor
-        vector_y *= scaling_factor
-
-    # Возвращаем результирующий вектор ускорения
-    return {"x": vector_x, "y": vector_y}
-
+        x *= scaling_factor
+        y *= scaling_factor
+    return {"x": x, "y": y}
 
 def get_nearest_bounty(transport, bounties):
     # Координаты корабля
@@ -98,25 +99,22 @@ def find_most_profitable_bounty(transport, bounties, max_distance=400):
 
     return best_bounty if best_bounty else None
 
+def adjust_force_to_stay_within_field(field_size, position, speed, force):
+    # Вычисляем будущее положение с учётом текущей скорости и силы
+    new_speed = {'x': speed['x'] + force['x'], 'y': speed['y'] + force['y']}
+    new_position = {'x': position['x'] + new_speed['x'], 'y': position['y'] + new_speed['y']}
 
-def get_transport(transport, acc_x, acc_y, use_shield, attack_x, attack_y):
-    req = dict()
-    req.update({
-        "acceleration": {
-            "x": 0,
-            "y": 0
-        },
-        "activateShield": False,
-        "attack": {
-            "x": 0,
-            "y": 0
-        },
-        "id": "00000000-0000-0000-0000-000000000000"
-    })
-    req['acceleration']['x'] = acc_x
-    req['acceleration']['y'] = acc_y
-    req['activateShield'] = use_shield
-    req['attack']['x'] = attack_x
-    req['attack']['y'] = attack_y
-    req['id'] = transport['id']
-    return req
+    # Корректируем вектор силы, чтобы оставаться в пределах поля
+    adjusted_force = {'x': force['x'], 'y': force['y']}
+
+    if new_position['x'] < 0:
+        adjusted_force['x'] = -position['x'] - speed['x']
+    elif new_position['x'] >= field_size['x']:
+        adjusted_force['x'] = field_size['x'] - 1 - position['x'] - speed['x']
+
+    if new_position['y'] < 0:
+        adjusted_force['y'] = -position['y'] - speed['y']
+    elif new_position['y'] >= field_size['y']:
+        adjusted_force['y'] = field_size['y'] - 1 - position['y'] - speed['y']
+
+    return adjusted_force
