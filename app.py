@@ -26,8 +26,8 @@ class App:
                 random_modifier(self.last_data)
             else:
                 self.last_data = res
-            self.visualizer.step(lambda: self.last_data)
-            self.last_req = await self.update_transports()
+            self.last_req, targets = await self.update_transports()
+            self.visualizer.step(lambda: self.last_data, lambda: targets)
             await asyncio.sleep(1 / 3)
 
     async def update_transports(self):
@@ -54,11 +54,14 @@ class App:
         shield_time_ms = self.last_data['shieldTimeMs']
         shield_cooldown_ms = self.last_data['shieldCooldownMs']
 
+
+        targets = []
         for transport in transports:
             top_target = self.rate_targets(transport, anomalies, enemies, wanted_list, bounties)
+            targets.append(top_target)
             acc = self.reach_target_acceleration(transport, top_target, map_size, max_accel)
             req['transports'].append(self.get_transport(transport, acc['x'], acc['y'], False, 0, 0))
-        return req
+        return req, targets
 
     def rate_targets(self, transport, anomalies, enemies, wanted_list, bounties):
         return get_nearest_bounty(transport, bounties)
