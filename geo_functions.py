@@ -21,7 +21,6 @@ def get_max_vector_to_target(transport, x2, y2, max_acceleration):
 
 
 def get_nearest_bounty(transport, bounties):
-    start_t = datetime.now()
     # Координаты корабля
     transport_x = transport["x"]
     transport_y = transport["y"]
@@ -42,9 +41,6 @@ def get_nearest_bounty(transport, bounties):
         if distance < min_distance:
             min_distance = distance
             nearest_bounty = bounty
-
-    end = datetime.now()
-    print(end - start_t)
     return nearest_bounty
 
 

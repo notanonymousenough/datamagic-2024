@@ -14,19 +14,20 @@ class App:
         self.api = Api(token, debug)
         self.visualizer = GameVisualizer()
         self.last_data = mocked_json
-
-    async def run(self):
-        req = {
+        self.last_req = {
             "transports": []
         }
+
+    async def run(self):
         while True:
-            res = await self.api.move(req)
+            res = await self.api.move(self.last_req)
+            print(res)
             if res is None and self.debug:
                 random_modifier(self.last_data)
             else:
                 self.last_data = res
             self.visualizer.step(lambda: self.last_data)
-            req = await self.update_transports()
+            self.last_req = await self.update_transports()
             await asyncio.sleep(1 / 3)
 
     async def update_transports(self):
@@ -35,16 +36,40 @@ class App:
         }
 
         transports = self.last_data['transports']
+        anomalies = self.last_data['anomalies']
+        enemies = self.last_data['enemies']
+        wantedList = self.last_data['wantedList']
         bounties = self.last_data['bounties']
 
+        mapSize = self.last_data['mapSize']
+
+        maxSpeed = self.last_data['maxSpeed']
+        maxAccel = self.last_data['maxAccel']
+
+        attackRange = self.last_data['attackRange']
+        attackCooldownMs = self.last_data['attackCooldownMs']
+        attackDamage = self.last_data['attackDamage']
+        attackExplosionRadius = self.last_data['attackExplosionRadius']
+
+        shieldTimeMs = self.last_data['shieldTimeMs']
+        shieldCooldownMs = self.last_data['shieldCooldownMs']
+
+
+
         for transport in transports:
-            target_bounty = get_nearest_bounty(transport, bounties)
-            # target_bounty = find_most_profitable_bounty(transport, bounties)
-            acc = get_max_vector_to_target(transport, target_bounty['x'], target_bounty['y'], 10)
-            tr_req = get_transport(transport, acc['x'], acc['y'], False, 0, 0)
+            top_target = self.rate_targets(transport, anomalies, enemies, wantedList, bounties)
+            tr_req = self.reach_target(transport, top_target)
             req['transports'].append(tr_req)
         return req
 
+    def rate_targets(self, transport, anomalies, enemies, wantedList, bounties):
+        return get_nearest_bounty(transport, bounties)
+
+    def reach_target(self, transport, target):
+        acc = get_max_vector_to_target(transport, target['x'], target['y'], 10)
+        tr_req = get_transport(transport, acc['x'], acc['y'], False, 0, 0)
+        return tr_req
+
     async def close(self):
         await self.api.close()
-        # self.visualizer.close()
+        self.visualizer.close()
