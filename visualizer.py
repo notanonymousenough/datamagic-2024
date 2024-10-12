@@ -12,15 +12,19 @@ ENEMY_COLOR = (255, 0, 0, 200)  # Красный
 ENEMY_WITH_SHIELD_COLOR = (255, 100, 0)  # Красный
 BOUNTY_COLOR = (255, 215, 0)  # Золотой цвет
 BOUNTY_TARGET_COLOR = (0, 0, 0)  # Золотой цвет
-ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 64)  # Полупрозрачный цвет для аномалий
-ANOMALY_COLOR_EFFECTIVITY_POSITIVE = (0, 255, 255, 1)  # Полупрозрачный цвет для аномалий
-ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 64)  # Полупрозрачный цвет для аномалий
-ANOMALY_COLOR_EFFECTIVITY_NEGATIVE = (140, 0, 255, 1)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 84)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_EFFECTIVITY_POSITIVE = (0, 255, 255, 32)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 84)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_EFFECTIVITY_NEGATIVE = (140, 0, 255, 32)  # Полупрозрачный цвет для аномалий
 
 
 def map_coordinates(x, y, map_size, screen_size):
     # return int(x * screen_size[0] / map_size['x']), int(y * screen_size[1] / map_size['y'])
     return int(x * screen_size[0] / map_size['x']), int((map_size['y'] - y) * screen_size[1] / map_size['y'])  # инвертировать по вертикали
+
+
+def get_radius(radius, map_size, screen_size):
+    return int(radius * screen_size[0] / map_size['x']) + 1
 
 
 class GameVisualizer:
@@ -43,13 +47,15 @@ class GameVisualizer:
 
         # Рисуем "награды" (bounties)
         for bounty in data['bounties']:
+            radius = get_radius(bounty['radius'], data['mapSize'], self.screen.get_size())
             bounty_x, bounty_y = map_coordinates(bounty['x'], bounty['y'], data['mapSize'], self.screen.get_size())
-            pygame.draw.circle(self.screen, BOUNTY_COLOR, (bounty_x, bounty_y), bounty['radius'])
+            pygame.draw.circle(self.screen, BOUNTY_COLOR, (bounty_x, bounty_y), radius)
 
         # Рисуем врагов
         for enemy in data['enemies']:
             enemy_x, enemy_y = map_coordinates(enemy['x'], enemy['y'], data['mapSize'], self.screen.get_size())
-            enemy_radius = 5  # Радиус для отображения врагов
+
+            enemy_radius = get_radius(5, data['mapSize'], self.screen.get_size())
             surface_enemy = pygame.Surface((enemy_radius * 2, enemy_radius * 2), pygame.SRCALPHA)
             color = ENEMY_COLOR
             if enemy['shieldLeftMs'] != 0:
@@ -61,8 +67,20 @@ class GameVisualizer:
         for anomaly in data['anomalies']:
             anomaly_x, anomaly_y = map_coordinates(anomaly['x'], anomaly['y'], data['mapSize'], self.screen.get_size())
 
+            # Вторая поверхность для большого круга с радиусом "effectiveRadius"
+            effective_radius = get_radius(anomaly['effectiveRadius'], data['mapSize'], self.screen.get_size())
+            if anomaly['strength'] >= 0:
+                anomaly_color = ANOMALY_COLOR_EFFECTIVITY_POSITIVE
+            else:
+                anomaly_color = ANOMALY_COLOR_EFFECTIVITY_NEGATIVE
+            surface_large = pygame.Surface((effective_radius * 2, effective_radius * 2), pygame.SRCALPHA)  # Диаметр
+            pygame.draw.circle(surface_large, anomaly_color, (effective_radius, effective_radius),
+                               effective_radius)  # Круг с радиусом effectiveRadius
+            self.screen.blit(surface_large,
+                        (anomaly_x - effective_radius, anomaly_y - effective_radius))  # Смещаем центр круга
+
             # Первая поверхность для круга с радиусом "radius"
-            radius = int(anomaly['radius'])
+            radius = get_radius(anomaly['radius'], data['mapSize'], self.screen.get_size())
             if anomaly['strength'] >= 0:
                 anomaly_color = ANOMALY_COLOR_CENTER_POSITIVE
             else:
@@ -71,25 +89,20 @@ class GameVisualizer:
             pygame.draw.circle(surface_small, anomaly_color, (radius, radius), radius)  # Рисуем круг с радиусом
             self.screen.blit(surface_small, (anomaly_x - radius, anomaly_y - radius))  # Смещаем центр круга
 
-            # Вторая поверхность для большого круга с радиусом "effectiveRadius"
-            # effective_radius = int(anomaly['effectiveRadius'])
-            # surface_large = pygame.Surface((effective_radius * 2, effective_radius * 2), pygame.SRCALPHA)  # Диаметр
-            # pygame.draw.circle(surface_large, ANOMALY_COLOR_EFFECTIVITY, (effective_radius, effective_radius),
-            #                    effective_radius)  # Круг с радиусом effectiveRadius
-            # self.screen.blit(surface_large,
-            #             (anomaly_x - effective_radius, anomaly_y - effective_radius))  # Смещаем центр круга
 
         for bounty in targets:
+            radius = get_radius(data['transportRadius'], data['mapSize'], self.screen.get_size())
             bounty_x, bounty_y = map_coordinates(bounty['x'], bounty['y'], data['mapSize'], self.screen.get_size())
-            pygame.draw.circle(self.screen, BOUNTY_TARGET_COLOR, (bounty_x, bounty_y), bounty['radius'])
+            pygame.draw.circle(self.screen, BOUNTY_TARGET_COLOR, (bounty_x, bounty_y), radius)
 
         # Рисуем игроков
         for i, player in enumerate(data['transports']):
+            radius = get_radius(data['transportRadius'], data['mapSize'], self.screen.get_size())
             player_x, player_y = map_coordinates(player['x'], player['y'], data['mapSize'], self.screen.get_size())
             color = PLAYER_COLOR
             if player['shieldLeftMs'] != 0:
                 color = PLAYER_WITH_SHIELD_COLOR
-            pygame.draw.circle(self.screen, color, (player_x, player_y), data['transportRadius'])
+            pygame.draw.circle(self.screen, color, (player_x, player_y), radius)
 
             # Отображаем номер транспорта рядом с кругом
             number_text = self.font.render(str(i + 1), True, (0, 0, 0))  # Черный цвет для номера
