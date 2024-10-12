@@ -21,8 +21,9 @@ class App:
 
     async def run(self):
         while True:
+            print(self.last_req)
             res = await self.api.move(self.last_req)
-            print(res)
+            # print(res)
             if res is None and self.debug:
                 random_modifier(self.last_data)
             else:
@@ -70,6 +71,7 @@ class App:
         return get_nearest_bounty(transport, bounties)
 
     def rate_bandits_and_enemies(self, transport, wanted_list, enemies):
+        n = {'x': None, 'y': None}
         transport_x = transport["x"]
         transport_y = transport["y"]
 
@@ -85,7 +87,7 @@ class App:
             distance = math.sqrt((bandit_x - transport_x) ** 2 + (bandit_y - transport_y) ** 2)
 
             # Check if the distance is <= 200 and if the bandit's killBounty is the highest
-            if distance <= 200 and bandit["killBounty"] > max_bounty and bandit['shieldLeftMs'] != 0:
+            if distance <= 200 and bandit["killBounty"] > max_bounty and bandit['shieldLeftMs'] == 0:
                 max_bounty = bandit["killBounty"]
                 best_bandit = bandit
         if best_bandit != {'x':0, 'y':0}:
@@ -98,10 +100,12 @@ class App:
             enemy_x = enemy["x"]
             enemy_y = enemy["y"]
             distance = math.sqrt((enemy_x - transport_x) ** 2 + (enemy_y - transport_y) ** 2)
-            if distance <= 200 and enemy["killBounty"] > max_bounty and enemy['shieldLeftMs'] != 0:
+            if distance <= 200 and enemy["killBounty"] > max_bounty and enemy['shieldLeftMs'] == 0:
                 max_bounty = enemy["killBounty"]
                 best_enemy = enemy
-        return best_enemy
+        if best_enemy != {'x': 0, 'y': 0}:
+            return best_enemy
+        return n
 
     def reach_target_acceleration(self, transport, target, map_size, max_accel):
         # go to target

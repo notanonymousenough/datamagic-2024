@@ -9,11 +9,12 @@ BACKGROUND_COLOR = (255, 255, 255)  # Белый фон
 PLAYER_COLOR = (0, 0, 255)
 PLAYER_WITH_SHIELD_COLOR = (0, 255, 255)
 ENEMY_COLOR = (255, 0, 0, 200)  # Красный
+ENEMY_WITH_SHIELD_COLOR = (255, 100, 0)  # Красный
 BOUNTY_COLOR = (255, 215, 0)  # Золотой цвет
 BOUNTY_TARGET_COLOR = (0, 0, 0)  # Золотой цвет
-ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 128)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_POSITIVE = (0, 255, 255, 64)  # Полупрозрачный цвет для аномалий
 ANOMALY_COLOR_EFFECTIVITY_POSITIVE = (0, 255, 255, 1)  # Полупрозрачный цвет для аномалий
-ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 128)  # Полупрозрачный цвет для аномалий
+ANOMALY_COLOR_CENTER_NEGATIVE = (140, 0, 255, 64)  # Полупрозрачный цвет для аномалий
 ANOMALY_COLOR_EFFECTIVITY_NEGATIVE = (140, 0, 255, 1)  # Полупрозрачный цвет для аномалий
 
 
@@ -50,7 +51,10 @@ class GameVisualizer:
             enemy_x, enemy_y = map_coordinates(enemy['x'], enemy['y'], data['mapSize'], self.screen.get_size())
             enemy_radius = 5  # Радиус для отображения врагов
             surface_enemy = pygame.Surface((enemy_radius * 2, enemy_radius * 2), pygame.SRCALPHA)
-            pygame.draw.circle(surface_enemy, ENEMY_COLOR, (enemy_radius, enemy_radius), enemy_radius)
+            color = ENEMY_COLOR
+            if enemy['shieldLeftMs'] != 0:
+                color = ENEMY_WITH_SHIELD_COLOR
+            pygame.draw.circle(surface_enemy, color, (enemy_radius, enemy_radius), enemy_radius)
             self.screen.blit(surface_enemy, (enemy_x - enemy_radius, enemy_y - enemy_radius))
 
         # Рисуем аномалии (полупрозрачные)
